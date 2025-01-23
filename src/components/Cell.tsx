@@ -6,14 +6,12 @@ type TableObject = {
 // Type of properties = NameOfComponentProps
 interface CellProps {
   index: number; //VSCode -> F2
-  value: string;
   tableValue: TableObject[];
   onPlayerClick: Function;
 }
-export function Cell({ index, value, tableValue, onPlayerClick }: CellProps) {
-  let isSelected = tableValue[index].value == "" ? false : true;
-  let symbolClass = "";
-
+export function Cell({ index, tableValue, onPlayerClick }: CellProps) {
+  //! QUA
+  const isSelected = tableValue[index].value == "" ? false : true;
   return (
     <td
       className="cell"
@@ -21,11 +19,12 @@ export function Cell({ index, value, tableValue, onPlayerClick }: CellProps) {
         if (!isSelected) {
           console.log("clicked " + index);
           onPlayerClick(index);
-          symbolClass = " symbol-" + value;
         }
       }}
     >
-      <p className={symbolClass}>{`${tableValue[index].value}`}</p>
+      <p
+        className={isSelected ? " symbol-" + tableValue[index].value : ""}
+      >{`${tableValue[index].value}`}</p>
       <p className="coords">{`${index}`}</p>
     </td>
   );
