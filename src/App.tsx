@@ -1,4 +1,4 @@
-import { cloneElement, ReactElement, useState } from "react";
+import { useState } from "react";
 import "./App.css";
 import { Cell } from "./components/Cell";
 
@@ -12,16 +12,17 @@ function createInitialTableState() {
 //Utils
 // <T> -> Type variable
 function splitArrayToMatrix<T>(startArray: T[], n: number) {
-  const row: T[] = [];
-  const matrix: T[][] = [];
-  // TODO Da fare con REDUCE
-  startArray.forEach((value, index) => {
+  const matrix = startArray.reduce<T[][]>((acc, value, index, arr) => {
+    if (acc.length === 0) acc.push([]); //At least one element
+    const row = acc[acc.length - 1];
     row.push(value);
-    if ((index + 1) % n === 0) {
-      matrix.push([...row]);
-      row.length = 0;
+    if (row.length === n && arr.length - 1 !== index) {
+      acc.push([]);
     }
-  });
+    return acc;
+  }, []);
+
+  console.log(matrix);
 
   return matrix;
 }
@@ -58,20 +59,6 @@ function App() {
   console.log(filterReduce);}
   */
 
-  // const table = [
-  //   { index: 1, value: "" },
-  //   { index: 2, value: "" },
-  //   { index: 3, value: "" },
-  //   { index: 4, value: "" },
-  //   { index: 5, value: "" },
-  //   { index: 6, value: "" },
-  //   { index: 7, value: "" },
-  //   { index: 8, value: "" },
-  //   { index: 9, value: "" },
-  // ];
-
-  // const t = _.range(9); //Array da 1 parametro -> (0,8)
-
   const winArrays = [
     [1, 2, 3],
     [4, 5, 6],
@@ -91,18 +78,6 @@ function App() {
   const [tableState, setTableState] = useState(createInitialTableState);
   const movesMade = tableState.filter((a) => a.value !== "").length;
 
-  // function countMoves() {
-  //   /**
-  //    *  let movesMade = 0; //let cambia nel tempo -> usa funzioni pure
-  //    * tableState.forEach((cell) => {
-  //    * if (cell.value == "") movesMade++;
-  //    * });
-  //    */
-  //   //let cambia nel tempo -> usa funzioni pure
-  //   // ! QUA
-  //   return movesMade.length;
-  // }
-
   function handleCellClick(index: number) {
     updateTable(index);
     checkWinner();
@@ -110,14 +85,10 @@ function App() {
   }
 
   function switchPlayer() {
-    // ! QUA
     setActivePlayer(activePlayer == "X" ? "O" : "X");
   }
 
   function updateTable(cellIndex: number) {
-    // ! QUA!!
-    // const newTableState = tableState.map((obj, index) => ); NAHHH
-
     const newTableState = [...tableState];
     newTableState[cellIndex].value = activePlayer;
     setTableState(newTableState);
@@ -129,18 +100,6 @@ function App() {
   }
 
   function checkWinner() {
-    // Da fare solo dopo la 5 mossa
-    // let victoryCondition = false;
-    // normalizedWinArrays.forEach((combo) => {
-    //   if (
-    //     tableState[combo[0]].value == tableState[combo[1]].value &&
-    //     tableState[combo[0]].value == tableState[combo[2]].value &&
-    //     tableState[combo[0]].value != ""
-    //   ) {
-    //     victoryCondition = true;
-    //   }
-    // });
-
     if (movesMade > 4) {
       const winCombo = normalizedWinArrays.filter(
         (combo) =>
@@ -155,49 +114,23 @@ function App() {
     }
   }
 
-  function populateTable() {
-    const matrix = splitArrayToMatrix(tableState, 3);
-
-    return matrix.map((row) =>
-      row.map((value) => (
-        <Cell
-          key={value.index - 1}
-          index={value.index - 1}
-          tableValue={tableState}
-          onPlayerClick={handleCellClick}
-        />
-      ))
-    );
-
-    // tableState.forEach((_cell, index) => {
-    //   // console.log(index);
-
-    //   cellArray.push(
-    //     <Cell
-    //       key={index}
-    //       index={index}
-    //       tableValue={tableState}
-    //       onPlayerClick={handleCellClick}
-    //     />
-    //   );
-    //   // console.log("Length after push: " + cellArray.length);
-
-    //   if ((index + 1) % 3 == 0) {
-    //     rowsArray.push([...cellArray]);
-    //     cellArray.length = 0;
-    //   }
-    // });
-    // console.log(rowsArray);
-  }
-
   return (
     <>
       <h1>Tic Tac Toe</h1>
       <div className="board">
         <table>
           <tbody>
-            {populateTable().map((row) => (
-              <tr>{row}</tr>
+            {splitArrayToMatrix(tableState, 3).map((row, index) => (
+              <tr key={index}>
+                {row.map((value) => (
+                  <Cell
+                    key={value.index - 1}
+                    index={value.index - 1}
+                    tableValue={tableState}
+                    onPlayerClick={handleCellClick}
+                  />
+                ))}
+              </tr>
             ))}
           </tbody>
         </table>
