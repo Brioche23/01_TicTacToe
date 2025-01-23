@@ -77,6 +77,19 @@ function App() {
   const [activePlayer, setActivePlayer] = useState("X");
   const [tableState, setTableState] = useState(createInitialTableState);
   const movesMade = tableState.filter((a) => a.value !== "").length;
+  // const activePlayer = movesMade % 2 === 0 ? "X" : "O";
+  // if (movesMade > 4) {
+  //   const winCombo = normalizedWinArrays.filter(
+  //     (combo) =>
+  //       tableState[combo[0]].value == tableState[combo[1]].value &&
+  //       tableState[combo[0]].value == tableState[combo[2]].value &&
+  //       tableState[combo[0]].value != ""
+  //   );
+  //   // console.log(winCombo);
+
+  //   // Usa il filter, se lenght è maggiore di 0 è vittoria
+  //   if (winCombo.length > 0) alert("The winner was: " + activePlayer);
+  // }
 
   function handleCellClick(index: number) {
     updateTable(index);
@@ -96,7 +109,7 @@ function App() {
 
   function resetGame() {
     setTableState(createInitialTableState()); //Con parentesi -> perché altrimenti prende come prop lo stato precedente
-    setActivePlayer("X");
+    // setActivePlayer("X");
   }
 
   function checkWinner() {
@@ -122,14 +135,24 @@ function App() {
           <tbody>
             {splitArrayToMatrix(tableState, 3).map((row, index) => (
               <tr key={index}>
-                {row.map((value) => (
-                  <Cell
-                    key={value.index - 1}
-                    index={value.index - 1}
-                    tableValue={tableState}
-                    onPlayerClick={handleCellClick}
-                  />
-                ))}
+                {row.map((cell) => {
+                  const index = cell.index - 1;
+                  const isSelected = cell.value !== "";
+
+                  return (
+                    <Cell
+                      key={index}
+                      index={index}
+                      tableValue={cell.value}
+                      isSelected={isSelected}
+                      onPlayerClick={() => {
+                        if (!isSelected) {
+                          handleCellClick(index);
+                        }
+                      }}
+                    />
+                  );
+                })}
               </tr>
             ))}
           </tbody>

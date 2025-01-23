@@ -6,25 +6,26 @@ type TableObject = {
 // Type of properties = NameOfComponentProps
 interface CellProps {
   index: number; //VSCode -> F2
-  tableValue: TableObject[];
-  onPlayerClick: Function;
+  tableValue: string;
+  isSelected: boolean;
+  onPlayerClick: () => void; //Function type too generic -> specify function
 }
-export function Cell({ index, tableValue, onPlayerClick }: CellProps) {
-  //! QUA
-  const isSelected = tableValue[index].value == "" ? false : true;
+export function Cell({
+  index,
+  tableValue,
+  isSelected,
+  onPlayerClick,
+}: CellProps) {
   return (
     <td
       className="cell"
-      onClick={(e) => {
-        if (!isSelected) {
-          console.log("clicked " + index);
-          onPlayerClick(index);
-        }
+      onClick={() => {
+        onPlayerClick();
       }}
     >
       <p
-        className={isSelected ? " symbol-" + tableValue[index].value : ""}
-      >{`${tableValue[index].value}`}</p>
+        className={isSelected ? " symbol-" + tableValue : ""}
+      >{`${tableValue}`}</p>
       <p className="coords">{`${index}`}</p>
     </td>
   );
