@@ -6,8 +6,8 @@
 }
 
 .board {
+  width: 100%;
   height: 500px;
-  width: 500px;
   aspect-ratio: square;
 }
 
@@ -28,11 +28,11 @@ td {
 
 td:hover {
   background-color: #88888882;
-  transition: all;
-  animation: 300ms ease-in-out;
+  transition: all 300ms ease-in-out;
 }
 
-section.info {
+section.info,
+section.controls {
   width: 100%;
   padding-top: 1rem;
   display: flex;

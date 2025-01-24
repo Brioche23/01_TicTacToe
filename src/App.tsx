@@ -1,12 +1,89 @@
-import { useState } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import "./App.css";
 import { Cell } from "./components/Cell";
 
 import { range } from "lodash";
+import { CellState, Player } from "./lib/types";
+
+type Move = {
+  player: Player;
+  index: number;
+};
+
+const WIN_ARRAYS = [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9],
+  [1, 4, 7],
+  [2, 5, 8],
+  [3, 6, 9],
+  [1, 5, 9],
+  [3, 5, 7],
+];
+//Reducing all by -1
+const NORMALIZED_WIN_ARRAY = WIN_ARRAYS.map((a) => a.map((b) => b - 1));
+const MAX_MOVES = 9;
+const INITIAL_TABLE = createInitialTableState();
 
 function createInitialTableState() {
-  const table = range(1, 10).map((index) => ({ index, value: "" }));
+  const table = range(1, 10).map<CellState>((index) => ({ index }));
   return table;
+}
+
+function populateTable(moveHistory: Move[]) {
+  // ? Come non generarla tutte le volte?
+  // const table = range(1, 10).map<CellState>((index) => ({ index }));
+
+  // ! Logica sbagliata, ma funziona??
+  const t2 = INITIAL_TABLE.reduce<CellState[]>((acc, e, redIndex) => {
+    e.value = undefined;
+    moveHistory.map((move) => {
+      if (redIndex === move.index) {
+        e.value = move.player;
+      }
+    });
+    acc.push(e);
+    return acc;
+  }, []);
+
+  // const t2 = table.map((cell, tIndex) => {
+  //   const filter = moveHistory.filter((move) => tIndex === move.index);
+  //   console.log(filter);
+  //   cell.value = filter[0].player;
+  // });
+  // const t2 = table.map((cell, tIndex) => {
+  //     moveHistory.map((move) => {
+  //     if (tIndex === move.index) {
+  //       cell.value = move.player;
+  //       return cell.value;
+  //     }
+  //   });
+  // });
+
+  // console.log("Table: ");
+  // console.log(table);
+  console.log("T2: ");
+  console.log(t2);
+
+  return t2;
+}
+
+// TODO Fare versione in cui passo la tabella corrente + la nuova mossa!
+function populateTable2(
+  lastMove: Move,
+  lastTableState: CellState[] = INITIAL_TABLE
+) {
+  if (lastMove) {
+    // const newTableCell:CellState = {value:lastMove.player, index:lastTableState[]}
+    const newTableState = lastTableState.splice(lastMove.index, 1, lastMove);
+    console.log(newTableState);
+
+    return newTableState;
+  } else return lastTableState;
+}
+
+function getOpponent(player: Player): Player {
+  return player === "X" ? "O" : "X";
 }
 
 //Utils
@@ -22,10 +99,15 @@ function splitArrayToMatrix<T>(startArray: T[], n: number) {
     return acc;
   }, []);
 
-  console.log(matrix);
+  // console.log(matrix);
 
   return matrix;
 }
+
+function compareThreeValues<S>(a: S, b: S, c: S, empty: S) {
+  return a == b && a == c && a != empty;
+}
+
 function App() {
   /* IMMUTABILITY
   function immutabilityConcepts(){
@@ -59,72 +141,61 @@ function App() {
   console.log(filterReduce);}
   */
 
-  const winArrays = [
-    [1, 2, 3],
-    [4, 5, 6],
-    [7, 8, 9],
-    [1, 4, 7],
-    [2, 5, 8],
-    [3, 6, 9],
-    [1, 5, 9],
-    [3, 5, 7],
-  ];
+  const [moveHistory, setTableHistory] = useState<Move[]>([]);
+  // const [tableState, setTableState] = useState(createInitialTableState);
+  const movesMade = moveHistory.length;
+  const tableState = populateTable(moveHistory);
+  const activePlayer: Player = movesMade % 2 === 0 ? "X" : "O";
 
-  //Reducing all by -1
-  const normalizedWinArrays = winArrays.map((a) => a.map((b) => b - 1));
+  console.log(moveHistory);
+  console.log(tableState);
 
-  const maxMoves = 9;
-  const [activePlayer, setActivePlayer] = useState("X");
-  const [tableState, setTableState] = useState(createInitialTableState);
-  const movesMade = tableState.filter((a) => a.value !== "").length;
-  // const activePlayer = movesMade % 2 === 0 ? "X" : "O";
-  // if (movesMade > 4) {
-  //   const winCombo = normalizedWinArrays.filter(
-  //     (combo) =>
-  //       tableState[combo[0]].value == tableState[combo[1]].value &&
-  //       tableState[combo[0]].value == tableState[combo[2]].value &&
-  //       tableState[combo[0]].value != ""
-  //   );
-  //   // console.log(winCombo);
+  useLayoutEffect(() => {
+    if (
+      movesMade > 4 &&
+      NORMALIZED_WIN_ARRAY.filter((combo) =>
+        compareThreeValues(
+          tableState[combo[0]].value,
+          tableState[combo[1]].value,
+          tableState[combo[2]].value,
+          undefined
+        )
+      ).length > 0
+    ) {
+      const winnerPlayer = getOpponent(activePlayer);
+      //! Avviene 2 volte, come mai? -> useEffect
+      console.log("The winner was: " + winnerPlayer);
+      alert("The winner was: " + winnerPlayer);
+      resetGame(); //Loop
+    }
 
-  //   // Usa il filter, se lenght è maggiore di 0 è vittoria
-  //   if (winCombo.length > 0) alert("The winner was: " + activePlayer);
-  // }
+    if (movesMade === 9) {
+      console.log("It's a tie!!");
+      alert("It's a tie!!");
+      resetGame(); //Loop
+    }
+  }, [movesMade, tableState, activePlayer]);
 
   function handleCellClick(index: number) {
-    updateTable(index);
-    checkWinner();
-    switchPlayer();
+    updateState(index);
   }
 
-  function switchPlayer() {
-    setActivePlayer(activePlayer == "X" ? "O" : "X");
+  function updateState(cellIndex: number) {
+    // const newTableState = [...tableState];
+    // newTableState[cellIndex].value = activePlayer;
+    // setTableState(newTableState);
+
+    const newMove: Move = { player: activePlayer, index: cellIndex };
+    setTableHistory(moveHistory.concat(newMove));
   }
 
-  function updateTable(cellIndex: number) {
-    const newTableState = [...tableState];
-    newTableState[cellIndex].value = activePlayer;
-    setTableState(newTableState);
+  function goBack() {
+    setTableHistory(moveHistory.slice(0, -1));
   }
 
   function resetGame() {
-    setTableState(createInitialTableState()); //Con parentesi -> perché altrimenti prende come prop lo stato precedente
-    // setActivePlayer("X");
-  }
-
-  function checkWinner() {
-    if (movesMade > 4) {
-      const winCombo = normalizedWinArrays.filter(
-        (combo) =>
-          tableState[combo[0]].value == tableState[combo[1]].value &&
-          tableState[combo[0]].value == tableState[combo[2]].value &&
-          tableState[combo[0]].value != ""
-      );
-      console.log(winCombo);
-
-      // Usa il filter, se lenght è maggiore di 0 è vittoria
-      if (winCombo.length > 0) alert("The winner was: " + activePlayer);
-    }
+    setTableHistory([]);
+    // setTableState(createInitialTableState()); //Con parentesi -> perché altrimenti prende come prop lo stato precedente
   }
 
   return (
@@ -137,8 +208,7 @@ function App() {
               <tr key={index}>
                 {row.map((cell) => {
                   const index = cell.index - 1;
-                  const isSelected = cell.value !== "";
-
+                  const isSelected = cell.value !== undefined;
                   return (
                     <Cell
                       key={index}
@@ -169,12 +239,29 @@ function App() {
         </div>
         <div>
           <h2>Remaining moves</h2>
-          <p>{maxMoves - movesMade}</p>
+          <p>{MAX_MOVES - movesMade}</p>
         </div>
       </section>
-      <div>
-        <button onClick={resetGame}>Reset Game</button>
-      </div>
+      <section className="controls">
+        <div>
+          <button
+            onClick={() => {
+              if (moveHistory.length > 0) goBack();
+            }}
+          >
+            Back
+          </button>
+        </div>
+        <div>
+          <button
+            onClick={() => {
+              if (moveHistory.length > 0) resetGame();
+            }}
+          >
+            Reset Game
+          </button>
+        </div>
+      </section>
     </>
   );
 }
