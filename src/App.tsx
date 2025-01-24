@@ -10,7 +10,8 @@ type Move = {
   index: number;
 };
 
-const WIN_ARRAYS = [
+//Reducing all by -1
+const NORMALIZED_WIN_ARRAY = [
   [1, 2, 3],
   [4, 5, 6],
   [7, 8, 9],
@@ -19,68 +20,70 @@ const WIN_ARRAYS = [
   [3, 6, 9],
   [1, 5, 9],
   [3, 5, 7],
-];
-//Reducing all by -1
-const NORMALIZED_WIN_ARRAY = WIN_ARRAYS.map((a) => a.map((b) => b - 1));
+].map((a) => a.map((b) => b - 1));
 const MAX_MOVES = 9;
-const INITIAL_TABLE = createInitialTableState();
-
-function createInitialTableState() {
-  const table = range(1, 10).map<CellState>((index) => ({ index }));
-  return table;
-}
+const CELL_INDEXES = range(9);
 
 function populateTable(moveHistory: Move[]) {
-  // ? Come non generarla tutte le volte?
-  // const table = range(1, 10).map<CellState>((index) => ({ index }));
-
-  // ! Logica sbagliata, ma funziona??
-  const t2 = INITIAL_TABLE.reduce<CellState[]>((acc, e, redIndex) => {
-    e.value = undefined;
-    moveHistory.map((move) => {
-      if (redIndex === move.index) {
-        e.value = move.player;
-      }
-    });
-    acc.push(e);
-    return acc;
-  }, []);
+  // const outputTable = INITIAL_TABLE.reduce<CellState[]>((acc, e, redIndex) => {
+  //   e.value = undefined;
+  //   moveHistory.map((move) => {
+  //     if (redIndex === move.index) {
+  //       e.value = move.player;
+  //     }
+  //   });
+  //   acc.push(e);
+  //   return acc;
+  // }, []);
 
   // const t2 = table.map((cell, tIndex) => {
   //   const filter = moveHistory.filter((move) => tIndex === move.index);
   //   console.log(filter);
   //   cell.value = filter[0].player;
   // });
-  // const t2 = table.map((cell, tIndex) => {
-  //     moveHistory.map((move) => {
-  //     if (tIndex === move.index) {
-  //       cell.value = move.player;
-  //       return cell.value;
-  //     }
-  //   });
-  // });
+  // ! Logica sbagliata, ma funziona??
+  const outputTable = CELL_INDEXES.map<CellState>((tIndex) => {
+    const matchingMove = moveHistory.find(
+      (move) => move.index === tIndex
+
+      // if (tIndex === move.index) {
+      //   cell.value = move.player;
+      //   return cell.value;
+    );
+
+    console.log("MV");
+    console.log(matchingMove);
+
+    return { value: matchingMove?.player, index: tIndex };
+  });
 
   // console.log("Table: ");
   // console.log(table);
   console.log("T2: ");
-  console.log(t2);
+  console.log(outputTable);
 
-  return t2;
+  return outputTable;
 }
 
 // TODO Fare versione in cui passo la tabella corrente + la nuova mossa!
-function populateTable2(
-  lastMove: Move,
-  lastTableState: CellState[] = INITIAL_TABLE
-) {
-  if (lastMove) {
-    // const newTableCell:CellState = {value:lastMove.player, index:lastTableState[]}
-    const newTableState = lastTableState.splice(lastMove.index, 1, lastMove);
-    console.log(newTableState);
+// function populateTable2(lastMove?: Move) {
+//   // I NEED LAST TABLE
+//   const outputeTable = CELL_INDEXES.reduce<CellState[]>((acc, e, redIndex) => {
+//     e.value = undefined;
 
-    return newTableState;
-  } else return lastTableState;
-}
+//     if (lastMove)
+//       if (redIndex === lastMove.index) {
+//         e.value = lastMove.player;
+//       }
+
+//     acc.push(e);
+//     return acc;
+//   }, []);
+
+//   console.log(outputeTable);
+
+//   return outputeTable;
+// }
 
 function getOpponent(player: Player): Player {
   return player === "X" ? "O" : "X";
@@ -145,6 +148,7 @@ function App() {
   // const [tableState, setTableState] = useState(createInitialTableState);
   const movesMade = moveHistory.length;
   const tableState = populateTable(moveHistory);
+  // const tableState = populateTable2(moveHistory[moveHistory.length - 1]);
   const activePlayer: Player = movesMade % 2 === 0 ? "X" : "O";
 
   console.log(moveHistory);
@@ -207,7 +211,7 @@ function App() {
             {splitArrayToMatrix(tableState, 3).map((row, index) => (
               <tr key={index}>
                 {row.map((cell) => {
-                  const index = cell.index - 1;
+                  const index = cell.index;
                   const isSelected = cell.value !== undefined;
                   return (
                     <Cell
