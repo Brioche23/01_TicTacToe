@@ -1,50 +1,121 @@
-# React + TypeScript + Vite
+# IMMUTABILITY
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+```ts
+function immutabilityConcepts() {
+  const array = [1, 2, 3, 4, 5];
+  console.log(array);
 
-Currently, two official plugins are available:
+  const array2x = array.map((a) => a * 2);
+  console.log(array2x);
+  console.log(array);
+  console.log(array);
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+  const arrayEven = array.filter((a) => a % 2 === 0);
+  console.log(arrayEven);
 
-## Expanding the ESLint configuration
+  let sum = 0;
+  array.forEach((e) => {
+    sum += e;
+  });
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+  const sumReduce = array.reduce((acc, e) => {
+    acc += e;
+    return acc;
+  }, 0);
+  console.log(sumReduce);
 
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+  const filterReduce = array.reduce<number[]>((acc, e) => {
+    //Push e pop
+    if (e % 2 === 0) acc.push(e);
+    return acc;
+  }, []);
+  console.log(filterReduce);
+}
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## TypeScript generic types
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+```ts
+// <T> -> Type variable
+function splitArrayToMatrix<T>(startArray: T[], n: number) {
+  const matrix = startArray.reduce<T[][]>((acc, value, index, arr) => {
+    if (acc.length === 0) acc.push([]); //At least one element
+    const row = acc[acc.length - 1];
+    row.push(value);
+    if (row.length === n && arr.length - 1 !== index) {
+      acc.push([]);
+    }
+    return acc;
+  }, []);
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+  return matrix;
+}
+```
+
+## Big O Notation
+
+```ts
+function populateTable(moveHistory: Move[]) {
+  console.log(moveHistory);
+
+  // Dictionary => Object con key as strings
+  //! O(N)
+  const movesByIndex = keyBy(moveHistory, (move) => {
+    return move.index;
+  });
+  console.log(movesByIndex);
+
+  //?? O(n^2) --> O(M)
+  // Cell state is alreday sorted
+  //? O(M) -> 9
+  const outputTable = CELL_INDEXES.map<CellState>((tIndex) => {
+    // Con Lodash -> keyBy / GroupBy
+    // Trn moveH into object key:{Move}
+    // const matchingMove = moveHistory.find(
+    //   /* //? O(n) -> from 0 to 9
+    //    * To Achieve o(log(n)) dovrei usare una Binary Search
+    //    */
+    //   (move) => move.index === tIndex
+    // );
+    //! O(1)
+    const matchingMove = movesByIndex[tIndex];
+
+    // const moveIndex = binarySearchMove(moveHistory, tIndex);
+    //   console.log(moveIndex);
+    //   const matchingMove = moveIndex !== -1 ? moveHistory[moveIndex];
+
+    console.log("TIndex: ", tIndex);
+    console.log("MM", matchingMove);
+    return { value: matchingMove?.player, index: tIndex };
+  });
+
+  console.log("outputTable: ");
+  console.log(outputTable);
+
+  return outputTable;
+}
+```
+
+## Memory References when working with Arrays and Objects
+
+```ts
+const arr = [
+  { a: 1, b: { c: 10 } },
+  { a: 2, b: { c: 11 } },
+  { a: 3, b: { c: 12 } },
+];
+const aDouble = arr.map((element) => {
+  //! a.a = a.a * 2;  NO reassign values -> mai =
+  const el2 = {
+    ...element,
+    a: element.a * 2,
+    b: { ...element.b, c: element.b.c * 2 },
+  }; // Created a copy with OTHER Refs
+  // el2.a *= 2; // Copy of a
+  // el2.b.c *= 2; // Not a copy... Only of Parent. c is a reference
+  return el2;
+});
+
+console.log("aDouble", aDouble);
+console.log("arr", arr);
 ```

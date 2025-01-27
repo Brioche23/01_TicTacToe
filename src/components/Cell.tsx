@@ -14,7 +14,6 @@ export function Cell({
   isSelected,
   onPlayerClick,
 }: CellProps) {
-  //   console.log("CELL", tableValue, isSelected);
   return (
     <td
       className="cell"
