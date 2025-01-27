@@ -2,7 +2,7 @@ import { useState, useEffect, useLayoutEffect } from "react";
 import "./App.css";
 import { Cell } from "./components/Cell";
 
-import { range } from "lodash";
+import { range, keyBy } from "lodash";
 import { CellState, Player } from "./lib/types";
 
 type Move = {
@@ -24,72 +24,91 @@ const NORMALIZED_WIN_ARRAY = [
 const MAX_MOVES = 9;
 const CELL_INDEXES = range(9);
 
+const arr = [
+  { a: 1, b: { c: 10 } },
+  { a: 2, b: { c: 11 } },
+  { a: 3, b: { c: 12 } },
+];
+const aDouble = arr.map((element) => {
+  //! a.a = a.a * 2;  NO reassign values
+  const el2 = {
+    ...element,
+    a: element.a * 2,
+    b: { ...element.b, c: element.b.c * 2 },
+  }; // Created a copy with OTHER Refs
+  // el2.a *= 2; // Copy of a
+  // el2.b.c *= 2; // Not a copy... Only of Parent. c is a reference
+  return el2;
+});
+
+console.log("aDouble", aDouble);
+console.log("arr", arr);
+
+function binarySearchMove(arr: Move[], target: number) {
+  var low = 0;
+  var high = arr.length - 1;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+
+    console.log("low: " + low);
+    console.log("high: " + high);
+    console.log("mid: " + mid);
+    if (arr[mid].index === target) {
+      return mid; // Target found
+    } else if (arr[mid].index < target) {
+      low = mid + 1; // Discard the left half
+    } else {
+      high = mid - 1; // Discard the right half
+    }
+  }
+  return -1; // Target not found
+}
+
 function populateTable(moveHistory: Move[]) {
-  // const outputTable = INITIAL_TABLE.reduce<CellState[]>((acc, e, redIndex) => {
-  //   e.value = undefined;
-  //   moveHistory.map((move) => {
-  //     if (redIndex === move.index) {
-  //       e.value = move.player;
-  //     }
-  //   });
-  //   acc.push(e);
-  //   return acc;
-  // }, []);
+  console.log(moveHistory);
 
-  // const t2 = table.map((cell, tIndex) => {
-  //   const filter = moveHistory.filter((move) => tIndex === move.index);
-  //   console.log(filter);
-  //   cell.value = filter[0].player;
-  // });
-  // ! Logica sbagliata, ma funziona??
+  // Dictionary => Object con key as strings
+  //! O(N)
+  const movesByIndex = keyBy(moveHistory, (move) => {
+    return move.index;
+  });
+  console.log(movesByIndex);
+
+  //?? O(n^2) --> O(M)
+  // Cell state is alreday sorted
+  //? O(M) -> 9
   const outputTable = CELL_INDEXES.map<CellState>((tIndex) => {
-    const matchingMove = moveHistory.find(
-      (move) => move.index === tIndex
+    // Con Lodash -> keyBy / GroupBy
+    // Trn moveH into object key:{Move}
+    // const matchingMove = moveHistory.find(
+    //   /* //? O(n) -> from 0 to 9
+    //    * To Achieve o(log(n)) dovrei usare una Binary Search
+    //    */
+    //   (move) => move.index === tIndex
+    // );
+    //! O(1)
+    const matchingMove = movesByIndex[tIndex];
 
-      // if (tIndex === move.index) {
-      //   cell.value = move.player;
-      //   return cell.value;
-    );
+    // const moveIndex = binarySearchMove(moveHistory, tIndex);
+    //   console.log(moveIndex);
+    //   const matchingMove = moveIndex !== -1 ? moveHistory[moveIndex];
 
-    console.log("MV");
-    console.log(matchingMove);
-
+    console.log("TIndex: ", tIndex);
+    console.log("MM", matchingMove);
     return { value: matchingMove?.player, index: tIndex };
   });
 
-  // console.log("Table: ");
-  // console.log(table);
-  console.log("T2: ");
+  console.log("outputTable: ");
   console.log(outputTable);
 
   return outputTable;
 }
 
-// TODO Fare versione in cui passo la tabella corrente + la nuova mossa!
-// function populateTable2(lastMove?: Move) {
-//   // I NEED LAST TABLE
-//   const outputeTable = CELL_INDEXES.reduce<CellState[]>((acc, e, redIndex) => {
-//     e.value = undefined;
-
-//     if (lastMove)
-//       if (redIndex === lastMove.index) {
-//         e.value = lastMove.player;
-//       }
-
-//     acc.push(e);
-//     return acc;
-//   }, []);
-
-//   console.log(outputeTable);
-
-//   return outputeTable;
-// }
-
 function getOpponent(player: Player): Player {
   return player === "X" ? "O" : "X";
 }
 
-//Utils
 // <T> -> Type variable
 function splitArrayToMatrix<T>(startArray: T[], n: number) {
   const matrix = startArray.reduce<T[][]>((acc, value, index, arr) => {
@@ -101,8 +120,6 @@ function splitArrayToMatrix<T>(startArray: T[], n: number) {
     }
     return acc;
   }, []);
-
-  // console.log(matrix);
 
   return matrix;
 }
@@ -145,14 +162,12 @@ function App() {
   */
 
   const [moveHistory, setTableHistory] = useState<Move[]>([]);
-  // const [tableState, setTableState] = useState(createInitialTableState);
   const movesMade = moveHistory.length;
   const tableState = populateTable(moveHistory);
-  // const tableState = populateTable2(moveHistory[moveHistory.length - 1]);
   const activePlayer: Player = movesMade % 2 === 0 ? "X" : "O";
 
-  console.log(moveHistory);
-  console.log(tableState);
+  // console.log(moveHistory);
+  // console.log(tableState);
 
   useLayoutEffect(() => {
     if (
@@ -185,10 +200,6 @@ function App() {
   }
 
   function updateState(cellIndex: number) {
-    // const newTableState = [...tableState];
-    // newTableState[cellIndex].value = activePlayer;
-    // setTableState(newTableState);
-
     const newMove: Move = { player: activePlayer, index: cellIndex };
     setTableHistory(moveHistory.concat(newMove));
   }
@@ -199,7 +210,6 @@ function App() {
 
   function resetGame() {
     setTableHistory([]);
-    // setTableState(createInitialTableState()); //Con parentesi -> perché altrimenti prende come prop lo stato precedente
   }
 
   return (
