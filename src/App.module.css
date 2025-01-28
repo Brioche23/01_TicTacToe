@@ -1,0 +1,31 @@
+section.info,
+section.controls {
+  width: 100%;
+  padding: 1rem 0;
+  display: flex;
+  place-content: space-between;
+}
+
+.infoBox {
+  display: flex;
+  place-content: center;
+  align-content: center;
+  height: fit-content;
+  gap: 1rem;
+}
+
+.infoBox .label {
+  font-size: 3rem;
+  display: block;
+}
+
+.coords {
+  color: gray;
+}
+
+.symbol-X {
+  color: blue;
+}
+.symbol-O {
+  color: red;
+}

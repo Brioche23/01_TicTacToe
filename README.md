@@ -52,6 +52,32 @@ function splitArrayToMatrix<T>(startArray: T[], n: number) {
 }
 ```
 
+```tsx
+{
+  splitArrayToMatrix(tableState, 3).map((row, index) => (
+    <div key={index} className={classes.cell}>
+      {row.map((cell) => {
+        const index = cell.index;
+        const isSelected = cell.value !== undefined;
+        return (
+          <Cell
+            key={index}
+            index={index}
+            tableValue={cell.value}
+            isSelected={isSelected}
+            onPlayerClick={() => {
+              if (!isSelected) {
+                handleCellClick(index);
+              }
+            }}
+          />
+        );
+      })}
+    </div>
+  ));
+}
+```
+
 ## Big O Notation
 
 ```ts

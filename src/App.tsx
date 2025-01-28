@@ -1,11 +1,15 @@
 import { useState, useLayoutEffect } from "react";
-import "./App.css";
 
-import classes from "./Table.module.css";
+// 1 file -> 1 css
+import styles from "./App.module.css";
 
 import { Cell } from "./components/Cell";
+import { Board } from "./components/Board";
+import { Button } from "./components/Button";
 import { range, keyBy } from "lodash";
 import { CellState, Player } from "./lib/types";
+
+import classNames from "classnames";
 
 type Move = {
   player: Player;
@@ -35,28 +39,11 @@ function populateTable(moveHistory: Move[]) {
     return { value: matchingMove?.player, index: tIndex };
   });
 
-  console.log("outputTable: ");
-  console.log(outputTable);
-
   return outputTable;
 }
 
 function getOpponent(player: Player): Player {
   return player === "X" ? "O" : "X";
-}
-
-function splitArrayToMatrix<T>(startArray: T[], n: number) {
-  const matrix = startArray.reduce<T[][]>((acc, value, index, arr) => {
-    if (acc.length === 0) acc.push([]);
-    const row = acc[acc.length - 1];
-    row.push(value);
-    if (row.length === n && arr.length - 1 !== index) {
-      acc.push([]);
-    }
-    return acc;
-  }, []);
-
-  return matrix;
 }
 
 function compareThreeValues<S>(a: S, b: S, c: S, empty: S) {
@@ -68,6 +55,7 @@ function App() {
   const movesMade = moveHistory.length;
   const tableState = populateTable(moveHistory);
   const activePlayer: Player = movesMade % 2 === 0 ? "X" : "O";
+
   useLayoutEffect(() => {
     if (
       movesMade > 4 &&
@@ -84,9 +72,7 @@ function App() {
       console.log("The winner was: " + winnerPlayer);
       alert("The winner was: " + winnerPlayer);
       resetGame(); //Loop
-    }
-
-    if (movesMade === 9) {
+    } else if (movesMade === 9) {
       console.log("It's a tie!!");
       alert("It's a tie!!");
       resetGame(); //Loop
@@ -111,70 +97,60 @@ function App() {
   }
 
   return (
-    <>
+    <main className={styles.container}>
       <h1>Tic Tac Toe</h1>
-      <div className={classes.board}>
-        <table>
-          <tbody>
-            {splitArrayToMatrix(tableState, 3).map((row, index) => (
-              <tr key={index}>
-                {row.map((cell) => {
-                  const index = cell.index;
-                  const isSelected = cell.value !== undefined;
-                  return (
-                    <Cell
-                      key={index}
-                      index={index}
-                      tableValue={cell.value}
-                      isSelected={isSelected}
-                      onPlayerClick={() => {
-                        if (!isSelected) {
-                          handleCellClick(index);
-                        }
-                      }}
-                    />
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <section className="info">
+      <Board>
+        {tableState.map((cell) => {
+          const index = cell.index;
+          const isSelected = cell.value !== undefined;
+          return (
+            <Cell
+              key={index}
+              index={index}
+              tableValue={cell.value}
+              onPlayerClick={() => {
+                if (!isSelected) {
+                  handleCellClick(index);
+                }
+              }}
+            />
+          );
+        })}
+      </Board>
+      <section className={styles.info}>
         <div>
           <h2>It's the turn of</h2>
-          <div className="player-box">
-            <span className={activePlayer == "X" ? "symbol-X" : "symbol-O"}>
+          <div className={styles.infoBox}>
+            <span
+              className={classNames(
+                styles.label,
+                activePlayer === "X" ? styles["symbol-X"] : styles["symbol-O"]
+              )}
+            >
               {activePlayer}
             </span>
           </div>
         </div>
         <div>
           <h2>Remaining moves</h2>
-          <p>{MAX_MOVES - movesMade}</p>
+          <div className={styles.infoBox}>
+            <span className={styles.label}>{MAX_MOVES - movesMade}</span>
+          </div>
         </div>
       </section>
-      <section className="controls">
+      <section className={styles.controls}>
         <div>
-          <button
-            onClick={() => {
-              if (moveHistory.length > 0) goBack();
-            }}
-          >
-            Back
-          </button>
+          <Button text="Back" moves={moveHistory.length} onClick={goBack} />
         </div>
         <div>
-          <button
-            onClick={() => {
-              if (moveHistory.length > 0) resetGame();
-            }}
-          >
-            Reset Game
-          </button>
+          <Button
+            text="Reset Game"
+            moves={moveHistory.length}
+            onClick={resetGame}
+          />
         </div>
       </section>
-    </>
+    </main>
   );
 }
 
