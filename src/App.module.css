@@ -12,15 +12,11 @@ section.controls {
   align-content: center;
   height: fit-content;
   gap: 1rem;
-}
 
-.infoBox .label {
-  font-size: 3rem;
-  display: block;
-}
-
-.coords {
-  color: gray;
+  .label {
+    font-size: 3rem;
+    display: block;
+  }
 }
 
 .symbol-X {

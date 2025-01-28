@@ -1,7 +1,7 @@
 // Type of properties = NameOfComponentProps
 
 import { CellState } from "../lib/types";
-import styles from "../Cell.module.css";
+import styles from "./Cell.module.css";
 import classNames from "classnames";
 
 interface CellProps {
