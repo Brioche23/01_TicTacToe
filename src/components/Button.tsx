@@ -3,20 +3,19 @@ import classNames from "classnames";
 
 interface ButtonProps {
   text: string;
-  moves: number;
+  disabled?: boolean;
   onClick: () => void; //Function type too generic -> specify function
 }
 
-export function Button({ text, moves, onClick }: ButtonProps) {
+export function Button({ text, disabled, onClick }: ButtonProps) {
   return (
     <button
       className={classNames(
         styles.btn,
-        moves > 0 && styles.active,
-        moves === 0 && styles.disabled
+        disabled ? styles.disabled : styles.active
       )}
       onClick={() => {
-        if (moves > 0) onClick();
+        if (!disabled) onClick();
       }}
     >
       {text}

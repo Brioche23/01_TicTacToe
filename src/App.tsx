@@ -1,4 +1,4 @@
-import { useState, useLayoutEffect } from "react";
+import { useState, useLayoutEffect, useEffect } from "react";
 
 // 1 file -> 1 css
 import styles from "./App.module.css";
@@ -6,7 +6,7 @@ import styles from "./App.module.css";
 import { Cell } from "./components/Cell";
 import { Board } from "./components/Board";
 import { Button } from "./components/Button";
-import { range, keyBy } from "lodash";
+import { range, keyBy, isNil } from "lodash";
 import { CellState, Player } from "./lib/types";
 
 import classNames from "classnames";
@@ -46,12 +46,53 @@ function getOpponent(player: Player): Player {
   return player === "X" ? "O" : "X";
 }
 
-function compareThreeValues<S>(a: S, b: S, c: S, empty: S) {
-  return a == b && a == c && a != empty;
+function areValuesEquals<S>(values: S[], empty?: S) {
+  return (
+    values[0] === values[1] && values[0] === values[2] && values[0] !== empty
+  );
 }
 
+function useMoveHistoryLocalStorage(initialValue: Move[]) {
+  const key = "history";
+  const [moveHistory, setTableHistory] = useState<Move[]>(() =>
+    getMoveHistoryInLocalStorage()
+  );
+
+  function setMoveHistoryInLocalStorage(value: Move[]) {
+    setTableHistory(value);
+    localStorage.setItem(key, JSON.stringify(value));
+    // const getLS = localStorage.getItem(key) ?? "[]";
+    // console.log("LS", JSON.parse(getLS));
+  }
+
+  function getMoveHistoryInLocalStorage() {
+    const getLS = localStorage.getItem(key);
+
+    if (isNil(getLS)) {
+      return initialValue;
+    }
+
+    try {
+      return JSON.parse(getLS) as Move[];
+    } catch (error) {
+      console.log(error);
+      return initialValue;
+    }
+  }
+
+  // return { moveHistory, setMoveHistoryInLocalStorage };
+  return [moveHistory, setMoveHistoryInLocalStorage] as const;
+}
+
+const tupla = [1, "2"] as const;
+console.log(tupla);
+const [s, d] = tupla;
+
 function App() {
-  const [moveHistory, setTableHistory] = useState<Move[]>([]);
+  const [moveHistory, setMoveHistoryInLocalStorage] =
+    useMoveHistoryLocalStorage([]);
+  // const { moveHistory: nomeVariabile, setMoveHistoryInLocalStorage } =
+  //   useMoveHistoryLocalStorage<Move[]>([]);
   const movesMade = moveHistory.length;
   const tableState = populateTable(moveHistory);
   const activePlayer: Player = movesMade % 2 === 0 ? "X" : "O";
@@ -60,11 +101,13 @@ function App() {
     if (
       movesMade > 4 &&
       NORMALIZED_WIN_ARRAY.filter((combo) =>
-        compareThreeValues(
-          tableState[combo[0]].value,
-          tableState[combo[1]].value,
-          tableState[combo[2]].value,
-          undefined
+        areValuesEquals(
+          // [
+          //   tableState[combo[0]].value,
+          //   tableState[combo[1]].value,
+          //   tableState[combo[2]].value,
+          // ],
+          combo.map((c) => tableState[c].value)
         )
       ).length > 0
     ) {
@@ -85,15 +128,23 @@ function App() {
 
   function updateState(cellIndex: number) {
     const newMove: Move = { player: activePlayer, index: cellIndex };
-    setTableHistory(moveHistory.concat(newMove));
+    // const newHistory = moveHistory.concat(newMove)
+    const newHistory = [...moveHistory, newMove];
+
+    setMoveHistoryInLocalStorage(newHistory);
+    // setTableHistory(newHistory);
+    // localStorage.setItem( "history",JSON.stringify(newHistory));
+    // const getLS = localStorage.getItem("history") ?? "[]";
+    // console.log("LS", JSON.parse(getLS));
   }
 
   function goBack() {
-    setTableHistory(moveHistory.slice(0, -1));
+    const newHistory = moveHistory.slice(0, -1);
+    setMoveHistoryInLocalStorage(newHistory);
   }
 
   function resetGame() {
-    setTableHistory([]);
+    setMoveHistoryInLocalStorage([]);
   }
 
   return (
@@ -140,12 +191,16 @@ function App() {
       </section>
       <section className={styles.controls}>
         <div>
-          <Button text="Back" moves={moveHistory.length} onClick={goBack} />
+          <Button
+            text="Back"
+            disabled={moveHistory.length === 0}
+            onClick={goBack}
+          />
         </div>
         <div>
           <Button
             text="Reset Game"
-            moves={moveHistory.length}
+            disabled={moveHistory.length === 0}
             onClick={resetGame}
           />
         </div>

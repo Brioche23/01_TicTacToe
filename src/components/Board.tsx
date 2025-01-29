@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import styles from "./Board.module.css";
 
 interface BoardProps {
-  children?: ReactNode[];
+  children?: ReactNode;
 }
 
 export function Board({ children }: BoardProps) {
