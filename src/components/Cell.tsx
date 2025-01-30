@@ -1,4 +1,6 @@
 // Type of properties = NameOfComponentProps
+import { useContext } from "react";
+import { GameContext } from "../GameContextProvider";
 
 import { CellState } from "../lib/types";
 import styles from "./Cell.module.css";
@@ -14,6 +16,7 @@ export function Cell({ index, tableValue, onPlayerClick }: CellProps) {
   const playerClass = classNames(
     tableValue === "X" ? styles["symbol-X"] : styles["symbol-O"]
   );
+  console.log(useContext(GameContext));
   return (
     <div
       className={styles.cell}

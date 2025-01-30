@@ -33,10 +33,26 @@ function immutabilityConcepts() {
 }
 ```
 
+Concat does not modify the array, creating a new one, and a shorthand can be:
+
+```ts
+const newHistory = moveHistory.concat(newMove);
+// IS EQUAL TO
+const newHistory = [...moveHistory, newMove];
+```
+
+Also
+
+```ts
+array.splice();
+```
+
+is used to crate a copy of an array
+
 ## TypeScript generic types
 
 ```ts
-// <T> -> Type variable
+// <T> -> Generic Type variable
 function splitArrayToMatrix<T>(startArray: T[], n: number) {
   const matrix = startArray.reduce<T[][]>((acc, value, index, arr) => {
     if (acc.length === 0) acc.push([]); //At least one element
@@ -51,6 +67,8 @@ function splitArrayToMatrix<T>(startArray: T[], n: number) {
   return matrix;
 }
 ```
+
+We have optimized it by putting it into the TSX
 
 ```tsx
 {
@@ -145,3 +163,169 @@ const aDouble = arr.map((element) => {
 console.log("aDouble", aDouble);
 console.log("arr", arr);
 ```
+
+## Defining Tuplas
+
+```ts
+const tupla = [1, "2"] as const;
+console.log(tupla);
+const [s, d] = tupla; //
+```
+
+## Null and Undefined Check
+
+isNil() is a cool lodash func that returns true if variable is === null || === undefined
+
+```ts
+if (isNil(getLS)) {
+  return initialValue;
+}
+```
+
+The ?? operator applies boolean on left element and if null, undefined or empty, returns the value on the right
+
+```ts
+const a = potentiallyNullViariable ?? "Other Value";
+```
+
+## Custom Hooks & localStorage
+
+```ts
+function useLocalStorage<T>(initialKey: string, initialValue: T) {
+  const [moveHistory, setTableHistory] = useState<T>(() =>
+    getLocalStorage(initialKey)
+  );
+
+  function setLocalStorage(key: string, value: T) {
+    setTableHistory(value);
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  function getLocalStorage(key: string) {
+    const getLS = localStorage.getItem(key);
+
+    if (isNil(getLS)) {
+      return initialValue;
+    }
+
+    try {
+      return JSON.parse(getLS) as T;
+    } catch (error) {
+      console.log(error);
+      return initialValue;
+    }
+  }
+```
+
+## TypeScript Type Guards
+
+A type guard is a TypeScript technique used to get information about the type of a variable, usually within a conditional block.
+Type guards are typically used for narrowing a type and are quite similar to feature detection, allowing you to detect the correct methods, prototypes, and properties of a value. Therefore, you can easily figure out how to handle that value.
+
+```ts
+instanceof
+typeof
+is
+in
+```
+
+# Context in React
+
+To “teleport” data to the components in the tree that need it without passing props? With React’s context feature. Avoiding _Prop dirlling_.
+
+1. Create a context. (You can call it LevelContext, since it’s for the heading level.)
+
+```ts
+import { createContext } from "react";
+export const LevelContext = createContext(1);
+```
+
+2. Use that context from the component that needs the data. (Heading will use LevelContext.)
+
+```tsx
+export default function Heading({ children }) {
+  const level = useContext(LevelContext);
+  // ...
+}
+
+<Section>
+  <Heading level={4}>Sub-sub-heading</Heading>
+  <Heading level={4}>Sub-sub-heading</Heading>
+  <Heading level={4}>Sub-sub-heading</Heading>
+</Section>;
+```
+
+3. Provide that context from the component that specifies the data. (Section will provide LevelContext.)
+
+```tsx
+import { LevelContext } from "./LevelContext.js";
+
+export default function Section({ level, children }) {
+  return (
+    <section className="section">
+      <LevelContext.Provider value={level}>{children}</LevelContext.Provider>
+    </section>
+  );
+}
+```
+
+## Context Placement
+
+Context Provider goes in the UPPER layer to the one we need context
+
+```tsx
+createRoot(document.getElementById("root")!).render(
+  <>
+    <GameContextProvider>
+      <App />
+    </GameContextProvider>
+  </>
+);
+```
+
+## Three Ways to do do conditional logic
+
+```ts
+// 01
+switch (winner) {
+  case "tie":
+    console.log("It's a tie!!");
+    alert("It's a tie!!");
+    resetGame();
+    break;
+
+  case "X":
+  case "O":
+    console.log("The winner was: " + winner);
+    alert("The winner was: " + winner);
+    resetGame();
+    break;
+  default:
+    break;
+}
+
+// 02
+const messages = {
+  tie: "pareggio",
+  X: "ha vinto il primo",
+  O: "havinto il secondo",
+};
+
+// 03
+if (!isNil(winner)) {
+  const message = messages[winner];
+  alert(message);
+  resetGame();
+}
+if (winner === "tie") {
+  console.log("It's a tie!!");
+  alert("It's a tie!!");
+  resetGame();
+} else if (!isNil(winner)) {
+  console.log("The winner was: " + winner);
+  alert("The winner was: " + winner);
+  resetGame();
+}
+```
+
+# MobX State Tree
