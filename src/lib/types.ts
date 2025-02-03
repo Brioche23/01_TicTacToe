@@ -1,6 +1,12 @@
 export type Player = "X" | "O";
 
 export type CellState = {
-  value?: Player;
+  player?: Player;
+  index: number;
+  isSelected: boolean;
+};
+
+export type Move = {
+  player: Player;
   index: number;
 };

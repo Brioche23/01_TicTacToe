@@ -1,18 +1,40 @@
 import { useLocalStorage } from "./hooks/useLocalStorage";
 
-import { createContext, ReactElement, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext } from "react";
 import { range, keyBy, isNil } from "lodash";
-import { CellState, Player } from "./lib/types";
+import { CellState, Player, Move } from "./lib/types";
 
 import { areThreeValuesEquals } from "./lib/utils";
 
-export type Move = {
-  player: Player;
-  index: number;
+const TEST = {
+  privateAValue: 0,
+
+  get a() {
+    return this.privateAValue;
+  },
+
+  set a(value: number) {
+    if (value % 2 === 0) {
+      this.privateAValue = value;
+    } else {
+      this.privateAValue = value - 1;
+    }
+  },
+
+  get doubleA() {
+    console.log("getter called");
+    return this.a * 2;
+  },
 };
 
+TEST.a = 9;
+
+console.log("TEST", TEST.a);
+console.log("TEST", TEST.doubleA);
+console.log("TEST", TEST.doubleA);
+console.log("TEST", TEST.doubleA);
+console.log("TEST", TEST.doubleA);
 interface ContextProps {
-  //   moveHistory: Move[];
   movesMade: number;
   tableState: CellState[];
   activePlayer: Player;
@@ -42,9 +64,14 @@ function populateTable(moveHistory: Move[]) {
     return move.index;
   });
 
-  const outputTable = CELL_INDEXES.map<CellState>((tIndex) => {
-    const matchingMove = movesByIndex[tIndex];
-    return { value: matchingMove?.player, index: tIndex };
+  const outputTable = CELL_INDEXES.map<CellState>((index) => {
+    const matchingMove = movesByIndex[index];
+    const player = matchingMove?.player;
+    return {
+      player,
+      index,
+      isSelected: player !== undefined,
+    };
   });
 
   return outputTable;
@@ -62,7 +89,7 @@ function checkWinner(
   if (
     movesMade > 4 &&
     NORMALIZED_WIN_ARRAY.filter((combo) =>
-      areThreeValuesEquals(combo.map((c) => tableState[c].value))
+      areThreeValuesEquals(combo.map((c) => tableState[c].player))
     ).length > 0
   ) {
     return getOpponent(activePlayer);
@@ -113,7 +140,6 @@ export const GameContextProvider = ({ children }: ContextProviderProps) => {
   return (
     <GameContext.Provider
       value={{
-        // moveHistory,
         movesMade,
         tableState,
         activePlayer,

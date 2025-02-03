@@ -1,90 +1,54 @@
-import { useLayoutEffect, useContext } from "react";
-
-import { GameContext, useGameContext } from "./GameContextProvider";
-
+import { useLayoutEffect } from "react";
+import { observer } from "mobx-react-lite";
 // 1 file -> 1 css
 import styles from "./App.module.css";
 
 import { Cell } from "./components/Cell";
 import { Board } from "./components/Board";
 import { Button } from "./components/Button";
-import { Player } from "./lib/types";
 
 import classNames from "classnames";
-
-export type Move = {
-  player: Player;
-  index: number;
-};
+import { useMst } from "./state";
 
 const MAX_MOVES = 9;
 
-function App() {
-  const {
-    movesMade,
-    tableState,
-    activePlayer,
-    winner,
-    updateState,
-    goBack,
-    resetGame,
-  } = useGameContext();
+const App = observer(() => {
+  const mst = useMst();
 
+  console.log("mst", mst.moves.length);
   useLayoutEffect(() => {
-    switch (winner) {
+    switch (mst.winner) {
       case "tie":
         console.log("It's a tie!!");
         alert("It's a tie!!");
-        resetGame();
+        mst.resetGame();
         break;
 
       case "X":
       case "O":
-        console.log("The winner was: " + winner);
-        alert("The winner was: " + winner);
-        resetGame();
+        console.log("The winner was: " + mst.winner);
+        alert("The winner was: " + mst.winner);
+        mst.resetGame();
         break;
       default:
         break;
     }
-
-    // const messages = {
-    //   tie: "pareggio",
-    //   X: "ha vinto il primo",
-    //   O: "havinto il secondo",
-    // };
-
-    // if (!isNil(winner)) {
-    //   const message = messages[winner]
-    //   alert(message)
-    //   resetGame()
-    // }
-    // if (winner === "tie") {
-    //   console.log("It's a tie!!");
-    //   alert("It's a tie!!");
-    //   resetGame();
-    // } else if (!isNil(winner)) {
-    //   console.log("The winner was: " + winner);
-    //   alert("The winner was: " + winner);
-    //   resetGame();
-    // }
-  }, [winner]);
+  }, [mst.winner]);
 
   return (
     <main className={styles.container}>
       <h1>Tic Tac Toe</h1>
       <Board>
-        {tableState.map((cell) => {
+        {mst.tableState.map((cell) => {
           const index = cell.index;
-          const isSelected = cell.value !== undefined;
           return (
             <Cell
               key={index}
               index={index}
-              tableValue={cell.value}
+              tableValue={cell.player}
               onPlayerClick={() => {
-                if (!isSelected) {
-                  updateState(index);
+                if (!cell.isSelected) {
+                  mst.updateState(index);
                 }
               }}
             />
@@ -98,34 +62,39 @@ function App() {
             <span
               className={classNames(
                 styles.label,
-                activePlayer === "X" ? styles["symbol-X"] : styles["symbol-O"]
+                mst.activePlayer === "X"
+                  ? styles["symbol-X"]
+                  : styles["symbol-O"]
               )}
             >
-              {activePlayer}
+              {mst.activePlayer}
             </span>
           </div>
         </div>
         <div>
           <h2>Remaining moves</h2>
           <div className={styles.infoBox}>
-            <span className={styles.label}>{MAX_MOVES - movesMade}</span>
+            <span className={styles.label}>{MAX_MOVES - mst.movesMade}</span>
           </div>
         </div>
       </section>
       <section className={styles.controls}>
         <div>
-          <Button text="Back" disabled={movesMade === 0} onClick={goBack} />
+          <Button
+            text="Back"
+            disabled={mst.movesMade === 0}
+            onClick={mst.goBack}
+          />
         </div>
         <div>
           <Button
             text="Reset Game"
-            disabled={movesMade === 0}
-            onClick={resetGame}
+            disabled={mst.movesMade === 0}
+            onClick={mst.resetGame}
           />
         </div>
       </section>
     </main>
   );
-}
-
+});
 export default App;

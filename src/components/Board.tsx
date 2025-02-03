@@ -6,6 +6,6 @@ interface BoardProps {
 }
 
 export function Board({ children }: BoardProps) {
-  console.log(children);
+  // console.log(children);
   return <div className={styles.board}>{children}</div>;
 }
