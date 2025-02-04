@@ -2,7 +2,6 @@
 
 import { observer } from "mobx-react-lite";
 import { CellState } from "../lib/types";
-import { MoveInstance } from "../state/MoveModel";
 import styles from "./Cell.module.css";
 import classNames from "classnames";
 
@@ -17,7 +16,6 @@ export const Cell = observer(
     const playerClass = classNames(
       tableValue === "X" ? styles["symbol-X"] : styles["symbol-O"]
     );
-    // console.log(useContext(GameContext));
     return (
       <div
         className={styles.cell}

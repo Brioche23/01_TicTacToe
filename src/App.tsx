@@ -1,39 +1,18 @@
-import { useLayoutEffect } from "react";
-import { observer } from "mobx-react-lite";
-// 1 file -> 1 css
-import styles from "./App.module.css";
+import styles from "./App.module.css"; // 1 file -> 1 css
+import classNames from "classnames";
 
 import { Cell } from "./components/Cell";
 import { Board } from "./components/Board";
 import { Button } from "./components/Button";
 
-import classNames from "classnames";
+import { observer } from "mobx-react-lite";
 import { useMst } from "./state";
 
 const MAX_MOVES = 9;
 
 const App = observer(() => {
   const mst = useMst();
-
-  console.log("mst", mst.moves.length);
-  useLayoutEffect(() => {
-    switch (mst.winner) {
-      case "tie":
-        console.log("It's a tie!!");
-        alert("It's a tie!!");
-        mst.resetGame();
-        break;
-
-      case "X":
-      case "O":
-        console.log("The winner was: " + mst.winner);
-        alert("The winner was: " + mst.winner);
-        mst.resetGame();
-        break;
-      default:
-        break;
-    }
-  }, [mst.winner]);
+  console.log("mst length", mst.moves.length);
 
   return (
     <main className={styles.container}>

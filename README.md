@@ -674,6 +674,64 @@ In TypeScript le views danno errore se richiamano metodi della stessa view. Quin
   }))
 ```
 
+### Reactions -> An alternative to useEffect()
+
+- `autorun` auto detects dependencies
+- `reaction` fine tuning
+- `when` just ONCE when condition is true
+
+```js
+ .actions((self) => {
+    //MobX LifeCycle
+    // Local disposers relative to the action
+    let disposer1: IReactionDisposer;
+    let disposer2: IReactionDisposer;
+
+    return {
+      afterCreate() {
+        console.log("CREATE");
+        const newHistory = getLocalStorage();
+        self.moves = newHistory; //Modify frozen
+
+        // Side Effect: when winner changes, print winner
+        disposer1 = autorun(() => {
+          console.log("AUTORUN");
+          switch (self.winner) {
+            case "tie":
+              console.log("It's a tie!!");
+              alert("It's a tie!!");
+              self.resetGame();
+              break;
+
+            case "X":
+            case "O":
+              console.log("The winner was: " + self.winner);
+              alert("The winner was: " + self.winner);
+              self.resetGame();
+              break;
+
+            default:
+              break;
+          }
+        });
+        // Side Effect: when moves changes, load on LS
+        disposer2 = reaction(
+          () => self.moves,
+          (moves) => {
+            console.log("REACTION –> Loading moves:", moves);
+            setLocalStorage(moves);
+          }
+        );
+      },
+      beforeDestroy() {
+        console.log("Destroy");
+        disposer1();
+        disposer2();
+      },
+    };
+  });
+```
+
 ## References??? (Approfondire con Ivan)
 
 Now, we want to be able to provide assignees for each of our TODOs.
