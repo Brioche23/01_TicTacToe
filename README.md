@@ -787,3 +787,61 @@ console.log("Value", testObj.getVal2());
 const getVal = testObj.getValue;
 console.log("Value", getVal()); //Nessun obj invoca questa funzione -> this === undefined
 ```
+
+## High Order Functions (HOF)
+
+Functions that take other functions as input and return a function.
+
+```js
+// HO Func -> HOF
+// HOC
+const createMultiplier = (n: number) => (n2: number) => n * n2;
+const multiplyer = (n: number, m: number) => n * m;
+const double = createMultiplier(2);
+
+const arr = [1, 2, 3, 4, 5, 6];
+const doubles = arr.map((n) => multiplyer(n, 3));
+const doubles = arr.map((n) => double(n));
+const doubles = arr.map(double);
+const doubles = arr.map(createMultiplier(2));
+const doubles = arr.map((n) => createMultiplier(2)(n));
+const doubles = arr.map(createMultiplier(2));
+const doubles = arr.map((n) => createMultiplier(2)(n));
+
+const doubledNumber = double(10);
+```
+
+Are also useful to create functions that return that very same function plus a logger of the parameters:
+
+```js
+const logger =
+  <Fn extends (...args: any[]) => any>(func: Fn) =>
+  (...args: Parameters<Fn>): ReturnType<Fn> => {
+    const val = func(...args);
+    console.log("[PARAMS]", args, "[RESULT]", val);
+    return val;
+  };
+
+const multWithLogs = logger(multiplyer);
+const doubles = arr.map((n) => multWithLogs(n, 4));
+console.log("doubles", doubles);
+```
+
+Internally they are used with MobX to automate the LifeCycle hooks and the generation of a disposer. In a function called `subscribe`
+
+```js
+const subscribe =
+  <T>(func: (self: T) => IReactionDisposer | void) =>
+  (self: T) => {
+    let disposer: IReactionDisposer | void;
+    return {
+      afterCreate() {
+        disposer = func(self);
+      },
+      beforeDestroy() {
+        console.log("Destroy");
+        disposer?.();
+      },
+    };
+  };
+```

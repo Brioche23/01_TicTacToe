@@ -1,4 +1,4 @@
-import { isNil, keyBy, multiply, range } from "lodash";
+import { isNil, keyBy, range } from "lodash";
 import { Instance, t } from "mobx-state-tree";
 import { createContext, useContext } from "react";
 import { areThreeValuesEquals } from "../lib/utils";
@@ -16,35 +16,6 @@ const NORMALIZED_WIN_ARRAY = [
   [3, 5, 7],
 ].map((a) => a.map((b) => b - 1));
 const CELL_INDEXES = range(9);
-
-// HO Func -> HOF
-// HOC
-const createMultiplier = (n: number) => (n2: number) => n * n2;
-const multiplyer = (n: number, m: number) => n * m;
-const double = createMultiplier(2);
-
-const arr = [1, 2, 3, 4, 5, 6];
-// // const doubles = arr.map((n) => multiplyer(n, 3));
-// const doubles = arr.map((n) => double(n));
-// const doubles = arr.map(double);
-// const doubles = arr.map(createMultiplier(2));
-// const doubles = arr.map((n) => createMultiplier(2)(n));
-// const doubles = arr.map(createMultiplier(2));
-// const doubles = arr.map((n) => createMultiplier(2)(n));
-
-// const doubledNumber = double(10);
-
-const logger =
-  <Fn extends (...args: any[]) => any>(func: Fn) =>
-  (...args: Parameters<Fn>): ReturnType<Fn> => {
-    const val = func(...args);
-    console.log("[PARAMS]", args, "[RESULT]", val);
-    return val;
-  };
-
-const multWithLogs = logger(multiplyer);
-const doubles = arr.map((n) => multWithLogs(n, 4));
-console.log("doubles", doubles);
 
 function populateTable(moves: Move[]) {
   const movesByIndex = keyBy(moves, (move) => {
@@ -84,9 +55,6 @@ function getLocalStorage(key: string) {
 const lifeCycle =
   <T>(func: (self: T) => IReactionDisposer | void) =>
   (self: T) => {
-    //MobX LifeCycle
-    // Local disposers relative to the action
-
     let disposer: IReactionDisposer | void;
     return {
       afterCreate() {
